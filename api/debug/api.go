@@ -36,9 +36,7 @@ import (
 	"time"
 
 	"github.com/klaytn/klaytn/log"
-	"github.com/klaytn/klaytn/metrics/exp"
 	"github.com/klaytn/klaytn/params"
-	"github.com/rcrowley/go-metrics"
 )
 
 // Handler is the global debugging handler.
@@ -113,55 +111,55 @@ func (*HandlerT) GcStats() *debug.GCStats {
 // StartPProf starts the pprof server.
 func (h *HandlerT) StartPProf(ptrAddr *string, ptrPort *int) error {
 	// Set the default server address and port if they are not set
-	var (
-		address string
-		port    int
-	)
-	if ptrAddr == nil || *ptrAddr == "" {
-		address = pprofAddrFlag.Value
-	} else {
-		address = *ptrAddr
-	}
+	// var (
+	// 	address string
+	// 	port    int
+	// )
+	// if ptrAddr == nil || *ptrAddr == "" {
+	// 	address = pprofAddrFlag.Value
+	// } else {
+	// 	address = *ptrAddr
+	// }
 
-	if ptrPort == nil || *ptrPort == 0 {
-		port = pprofPortFlag.Value
-	} else {
-		port = *ptrPort
-	}
+	// if ptrPort == nil || *ptrPort == 0 {
+	// 	port = pprofPortFlag.Value
+	// } else {
+	// 	port = *ptrPort
+	// }
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	// h.mu.Lock()
+	// defer h.mu.Unlock()
 
-	if h.pprofServer != nil {
-		return errors.New("pprof server is already running")
-	}
+	// if h.pprofServer != nil {
+	// 	return errors.New("pprof server is already running")
+	// }
 
-	serverAddr := fmt.Sprintf("%s:%d", address, port)
-	httpServer := &http.Server{Addr: serverAddr}
+	// serverAddr := fmt.Sprintf("%s:%d", address, port)
+	// httpServer := &http.Server{Addr: serverAddr}
 
-	if !h.handlerInited {
-		// Hook go-metrics into expvar on any /debug/metrics request, load all vars
-		// from the registry into expvar, and execute regular expvar handler.
-		exp.Exp(metrics.DefaultRegistry)
-		http.Handle("/memsize/", http.StripPrefix("/memsize", &Memsize))
-		h.handlerInited = true
-	}
+	// if !h.handlerInited {
+	// 	// Hook go-metrics into expvar on any /debug/metrics request, load all vars
+	// 	// from the registry into expvar, and execute regular expvar handler.
+	// 	exp.Exp(metrics.DefaultRegistry)
+	// 	http.Handle("/memsize/", http.StripPrefix("/memsize", &Memsize))
+	// 	h.handlerInited = true
+	// }
 
-	logger.Info("Starting pprof server", "addr", fmt.Sprintf("http://%s/debug/pprof", serverAddr))
-	go func(handle *HandlerT) {
-		if err := httpServer.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
-				logger.Info("pprof server is closed")
-			} else {
-				logger.Error("Failure in running pprof server", "err", err)
-			}
-		}
-		h.mu.Lock()
-		h.pprofServer = nil
-		h.mu.Unlock()
-	}(h)
+	// logger.Info("Starting pprof server", "addr", fmt.Sprintf("http://%s/debug/pprof", serverAddr))
+	// go func(handle *HandlerT) {
+	// 	if err := httpServer.ListenAndServe(); err != nil {
+	// 		if err == http.ErrServerClosed {
+	// 			logger.Info("pprof server is closed")
+	// 		} else {
+	// 			logger.Error("Failure in running pprof server", "err", err)
+	// 		}
+	// 	}
+	// 	h.mu.Lock()
+	// 	h.pprofServer = nil
+	// 	h.mu.Unlock()
+	// }(h)
 
-	h.pprofServer = httpServer
+	// h.pprofServer = httpServer
 
 	return nil
 }

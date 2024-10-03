@@ -34,7 +34,6 @@ import (
 	"github.com/klaytn/klaytn/accounts"
 	"github.com/klaytn/klaytn/common"
 	"github.com/klaytn/klaytn/log"
-	"gopkg.in/fatih/set.v0"
 )
 
 // Minimum amount of time between cache reloads. This limit applies if the platform does
@@ -85,7 +84,6 @@ func newAccountCache(keydir string) (*accountCache, chan struct{}) {
 		keydir: keydir,
 		byAddr: make(map[common.Address][]accounts.Account),
 		notify: make(chan struct{}, 1),
-		fileC:  fileCache{all: set.NewNonTS()},
 	}
 	ac.watcher = newWatcher(ac)
 	return ac, ac.notify

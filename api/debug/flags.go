@@ -28,7 +28,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/fjl/memsize/memsizeui"
 	"github.com/klaytn/klaytn/log"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
@@ -36,8 +35,6 @@ import (
 	"github.com/urfave/cli/v2/altsrc"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
-
-var Memsize memsizeui.Handler
 
 var (
 	verbosityFlag = &cli.IntFlag{

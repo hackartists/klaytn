@@ -24,12 +24,8 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strings"
 
-	"github.com/klaytn/klaytn/accounts"
-	"github.com/klaytn/klaytn/accounts/keystore"
 	"github.com/klaytn/klaytn/api/debug"
-	"github.com/klaytn/klaytn/client"
 	"github.com/klaytn/klaytn/cmd/utils"
 	"github.com/klaytn/klaytn/log"
 	metricutils "github.com/klaytn/klaytn/metrics/utils"
@@ -78,74 +74,74 @@ func MakeFullNode(ctx *cli.Context) *node.Node {
 // it unlocks any requested accounts, and starts the RPC/IPC interfaces and the
 // miner.
 func startNode(ctx *cli.Context, stack *node.Node) {
-	debug.Memsize.Add("node", stack)
+	// debug.Memsize.Add("node", stack)
 
-	// Ntp time check
-	if err := node.NtpCheckWithLocal(stack); err != nil {
-		log.Fatalf("System time should be synchronized: %v", err)
-	}
+	// // Ntp time check
+	// if err := node.NtpCheckWithLocal(stack); err != nil {
+	// 	log.Fatalf("System time should be synchronized: %v", err)
+	// }
 
-	// Start up the node itself
-	utils.StartNode(stack)
+	// // Start up the node itself
+	// utils.StartNode(stack)
 
-	// Register wallet event handlers to open and auto-derive wallets
-	events := make(chan accounts.WalletEvent, 16)
-	stack.AccountManager().Subscribe(events)
+	// // Register wallet event handlers to open and auto-derive wallets
+	// events := make(chan accounts.WalletEvent, 16)
+	// stack.AccountManager().Subscribe(events)
 
-	go func() {
-		// Create a chain state reader for self-derivation
-		rpcClient, err := stack.Attach()
-		if err != nil {
-			log.Fatalf("Failed to attach to self: %v", err)
-		}
-		stateReader := client.NewClient(rpcClient)
+	// go func() {
+	// 	// Create a chain state reader for self-derivation
+	// 	rpcClient, err := stack.Attach()
+	// 	if err != nil {
+	// 		log.Fatalf("Failed to attach to self: %v", err)
+	// 	}
+	// 	stateReader := client.NewClient(rpcClient)
 
-		// Open any wallets already attached
-		for _, wallet := range stack.AccountManager().Wallets() {
-			if err := wallet.Open(""); err != nil {
-				logger.Error("Failed to open wallet", "url", wallet.URL(), "err", err)
-			}
-		}
-		// Listen for wallet event till termination
-		for event := range events {
-			switch event.Kind {
-			case accounts.WalletArrived:
-				if err := event.Wallet.Open(""); err != nil {
-					logger.Error("New wallet appeared, failed to open", "url", event.Wallet.URL(), "err", err)
-				}
-			case accounts.WalletOpened:
-				status, _ := event.Wallet.Status()
-				logger.Info("New wallet appeared", "url", event.Wallet.URL(), "status", status)
+	// 	// Open any wallets already attached
+	// 	for _, wallet := range stack.AccountManager().Wallets() {
+	// 		if err := wallet.Open(""); err != nil {
+	// 			logger.Error("Failed to open wallet", "url", wallet.URL(), "err", err)
+	// 		}
+	// 	}
+	// 	// Listen for wallet event till termination
+	// 	for event := range events {
+	// 		switch event.Kind {
+	// 		case accounts.WalletArrived:
+	// 			if err := event.Wallet.Open(""); err != nil {
+	// 				logger.Error("New wallet appeared, failed to open", "url", event.Wallet.URL(), "err", err)
+	// 			}
+	// 		case accounts.WalletOpened:
+	// 			status, _ := event.Wallet.Status()
+	// 			logger.Info("New wallet appeared", "url", event.Wallet.URL(), "status", status)
 
-				if event.Wallet.URL().Scheme == "ledger" {
-					event.Wallet.SelfDerive(accounts.DefaultLedgerBaseDerivationPath, stateReader)
-				} else {
-					event.Wallet.SelfDerive(accounts.DefaultBaseDerivationPath, stateReader)
-				}
+	// 			if event.Wallet.URL().Scheme == "ledger" {
+	// 				event.Wallet.SelfDerive(accounts.DefaultLedgerBaseDerivationPath, stateReader)
+	// 			} else {
+	// 				event.Wallet.SelfDerive(accounts.DefaultBaseDerivationPath, stateReader)
+	// 			}
 
-			case accounts.WalletDropped:
-				logger.Info("Old wallet dropped", "url", event.Wallet.URL())
-				event.Wallet.Close()
-			}
-		}
-	}()
+	// 		case accounts.WalletDropped:
+	// 			logger.Info("Old wallet dropped", "url", event.Wallet.URL())
+	// 			event.Wallet.Close()
+	// 		}
+	// 	}
+	// }()
 
-	if utils.NetworkTypeFlag.Value == utils.SCNNetworkType && utils.ServiceChainConsensusFlag.Value == "clique" {
-		logger.Crit("using clique consensus type is not allowed anymore!")
-	} else {
-		startKlaytnAuxiliaryService(ctx, stack)
-	}
+	// if utils.NetworkTypeFlag.Value == utils.SCNNetworkType && utils.ServiceChainConsensusFlag.Value == "clique" {
+	// 	logger.Crit("using clique consensus type is not allowed anymore!")
+	// } else {
+	// 	startKlaytnAuxiliaryService(ctx, stack)
+	// }
 
-	// Unlock any account specifically requested
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	// // Unlock any account specifically requested
+	// ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
-	passwords := utils.MakePasswordList(ctx)
-	unlocks := strings.Split(ctx.String(utils.UnlockedAccountFlag.Name), ",")
-	for i, account := range unlocks {
-		if trimmed := strings.TrimSpace(account); trimmed != "" {
-			UnlockAccount(ctx, ks, trimmed, i, passwords)
-		}
-	}
+	// passwords := utils.MakePasswordList(ctx)
+	// unlocks := strings.Split(ctx.String(utils.UnlockedAccountFlag.Name), ",")
+	// for i, account := range unlocks {
+	// 	if trimmed := strings.TrimSpace(account); trimmed != "" {
+	// 		UnlockAccount(ctx, ks, trimmed, i, passwords)
+	// 	}
+	// }
 }
 
 func startKlaytnAuxiliaryService(ctx *cli.Context, stack *node.Node) {
@@ -240,11 +236,11 @@ var migrationApplied = map[*cli.Command]struct{}{}
 //
 // Example:
 //
-//    ken account new --keystore /tmp/mykeystore --lightkdf
+//	ken account new --keystore /tmp/mykeystore --lightkdf
 //
 // is equivalent after calling this method with:
 //
-//    ken --keystore /tmp/mykeystore --lightkdf account new
+//	ken --keystore /tmp/mykeystore --lightkdf account new
 //
 // i.e. in the subcommand Action function of 'account new', ctx.Bool("lightkdf)
 // will return true even if --lightkdf is set as a global option.
